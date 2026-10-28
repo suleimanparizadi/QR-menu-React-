@@ -9,14 +9,23 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
+    
     if (!token) {
       setLoading(false);
       return;
     }
+
     getProfile()
-      .then((res) => setUser(res.data.data))
-      .catch(() => localStorage.removeItem('token'))
-      .finally(() => setLoading(false));
+      .then((res) => {
+        setUser(res.data.data);
+      })
+      .catch(() => {
+        localStorage.removeItem('token');
+        setUser(null);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const login = (token, userData) => {
