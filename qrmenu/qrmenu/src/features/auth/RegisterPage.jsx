@@ -5,7 +5,7 @@ import {
   verifyRegister,
   getProfile,
 } from '../../api/auth';
-import { useAuth } from './AuthContext';
+import { useAuth } from './useAuth';
 
 export default function RegisterPage() {
   const [step, setStep] = useState(1);
@@ -61,7 +61,7 @@ export default function RegisterPage() {
 
       const profileRes = await getProfile();
       login(res.data.token, profileRes.data.data);
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       setError(err.response?.data?.message || 'کد وارد شده صحیح نیست.');
     } finally {

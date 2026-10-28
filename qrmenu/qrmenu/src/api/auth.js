@@ -15,5 +15,11 @@ export const initiateRegister = (phone_number, display_name, password, password_
     password_confirm,
   });
 
+export const sendLoginOTP = (phone_number) =>
+  client.post('/api/v1/accounts/login/send_otp/', { phone_number });
+
+export const verifyLoginOTP = (phone_number, code) =>
+  client.post('/api/v1/accounts/login/verify/', { phone_number, code });
+
 export const verifyRegister = (phone_number, code) =>
   client.post('/api/v1/accounts/register/verify/', {phone_number, code });

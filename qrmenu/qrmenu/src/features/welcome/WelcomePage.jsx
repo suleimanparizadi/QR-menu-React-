@@ -1,7 +1,5 @@
-
-import { Link } from 'react-router-dom';
-import { useAuth } from '../auth/AuthContext';
-
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../features/auth/useAuth';
 const steps = [
   {
     n: '۱',
@@ -43,12 +41,16 @@ const features = [
 ];
 
 export default function WelcomePage() {
-  const { user } = useAuth();
-
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  
   const primaryPath = user ? '/dashboard' : '/register';
-  const primaryLabel = user
-    ? 'رفتن به داشبورد'
-    : 'شروع کنید — رایگان';
+  const primaryLabel = user ? 'رفتن به داشبورد' : 'شروع کنید — رایگان';
+
+  const handleLogout = () => {
+    logout();
+    navigate('/'); // Stay on welcome page after logout
+  };
 
   return (
     <div className="welcome-page" dir="rtl">
@@ -67,21 +69,26 @@ export default function WelcomePage() {
 
           <div className="welcome-nav-actions">
             {user ? (
-              <Link
-                to="/dashboard"
-                className="btn btn-sm welcome-nav-register"
-              >
-                داشبورد
-              </Link>
+              <>
+                <span className="welcome-nav-user">
+                  {user.display_name || user.phone_number}
+                </span>
+                <Link to="/dashboard" className="btn btn-sm btn-ghost">
+                  داشبورد
+                </Link>
+                <Link to="/dashboard" className="btn btn-sm btn-ghost">
+                  پروفایل
+                </Link>
+                <button onClick={handleLogout} className="btn btn-sm btn-danger">
+                  خروج
+                </button>
+              </>
             ) : (
               <>
                 <Link to="/login" className="btn btn-ghost btn-sm">
                   ورود
                 </Link>
-                <Link
-                  to="/register"
-                  className="btn btn-sm welcome-nav-register"
-                >
+                <Link to="/register" className="btn btn-sm welcome-nav-register">
                   ثبت‌نام
                 </Link>
               </>
@@ -91,35 +98,23 @@ export default function WelcomePage() {
       </nav>
 
       <main>
-        <section
-          className="welcome-hero"
-          aria-labelledby="welcome-title"
-        >
-          <div
-            className="welcome-hero-overlay"
-            aria-hidden="true"
-          />
+        <section className="welcome-hero" aria-labelledby="welcome-title">
+          <div className="welcome-hero-overlay" aria-hidden="true" />
 
           <div className="welcome-hero-content">
             <span className="welcome-eyebrow">
               تجربه‌ای ساده‌تر برای کافه شما
             </span>
 
-            <h1 id="welcome-title">
-              منوی دیجیتال کافه و رستوران شما
-            </h1>
+            <h1 id="welcome-title">منوی دیجیتال کافه و رستوران شما</h1>
 
             <p>
-              در چند دقیقه منوی QR بسازید، قیمت‌ها را هر زمان
-              تغییر دهید و بخش‌های مختلف (صبحانه، ناهار، شام)
-              را بر اساس ساعت روز نمایش دهید.
+              در چند دقیقه منوی QR بسازید، قیمت‌ها را هر زمان تغییر دهید و بخش‌های
+              مختلف (صبحانه، ناهار، شام) را بر اساس ساعت روز نمایش دهید.
             </p>
 
             <div className="welcome-hero-actions">
-              <Link
-                to={primaryPath}
-                className="btn btn-accent btn-lg"
-              >
+              <Link to={primaryPath} className="btn btn-accent btn-lg">
                 {primaryLabel}
                 <span aria-hidden="true">←</span>
               </Link>
@@ -128,52 +123,33 @@ export default function WelcomePage() {
             <div className="welcome-hero-note">
               <span aria-hidden="true">✓</span>
               <span>بدون نیاز به نصب اپلیکیشن</span>
-              <span
-                className="welcome-note-divider"
-                aria-hidden="true"
-              >
+              <span className="welcome-note-divider" aria-hidden="true">
                 ·
               </span>
               <span>راه‌اندازی آسان</span>
             </div>
           </div>
 
-          <div
-            className="welcome-hero-decoration"
-            aria-hidden="true"
-          >
+          <div className="welcome-hero-decoration" aria-hidden="true">
             <span>☕</span>
           </div>
         </section>
 
-        <section
-          className="welcome-section welcome-how"
-          aria-labelledby="welcome-how-title"
-        >
+        {/* ... Rest of your sections (How it works, Features, CTA, Footer) remain the same ... */}
+        
+        <section className="welcome-section welcome-how" aria-labelledby="welcome-how-title">
           <div className="welcome-section-heading">
-            <span className="welcome-section-kicker">
-              شروع آسان
-            </span>
+            <span className="welcome-section-kicker">شروع آسان</span>
             <h2 id="welcome-how-title">چطور کار می‌کند؟</h2>
-            <p>
-              در چهار قدم ساده، منوی کافه‌تان را دیجیتال کنید
-            </p>
+            <p>در چهار قدم ساده، منوی کافه‌تان را دیجیتال کنید</p>
           </div>
 
           <div className="welcome-steps-grid">
             {steps.map((step) => (
-              <article
-                className="welcome-step-card"
-                key={step.n}
-              >
+              <article className="welcome-step-card" key={step.n}>
                 <div className="welcome-step-top">
-                  <span className="welcome-step-number">
-                    {step.n}
-                  </span>
-                  <span
-                    className="welcome-step-icon"
-                    aria-hidden="true"
-                  >
+                  <span className="welcome-step-number">{step.n}</span>
+                  <span className="welcome-step-icon" aria-hidden="true">
                     {step.icon}
                   </span>
                 </div>
@@ -185,30 +161,17 @@ export default function WelcomePage() {
           </div>
         </section>
 
-        <section
-          className="welcome-features-section"
-          aria-labelledby="welcome-features-title"
-        >
+        <section className="welcome-features-section" aria-labelledby="welcome-features-title">
           <div className="welcome-section welcome-features-inner">
             <div className="welcome-section-heading">
-              <span className="welcome-section-kicker">
-                امکانات کاربردی
-              </span>
-              <h2 id="welcome-features-title">
-                همه‌چیز برای یک منوی حرفه‌ای
-              </h2>
+              <span className="welcome-section-kicker">امکانات کاربردی</span>
+              <h2 id="welcome-features-title">همه‌چیز برای یک منوی حرفه‌ای</h2>
             </div>
 
             <div className="welcome-features-grid">
               {features.map((feature) => (
-                <div
-                  className="welcome-feature-item"
-                  key={feature}
-                >
-                  <span
-                    className="welcome-feature-check"
-                    aria-hidden="true"
-                  >
+                <div className="welcome-feature-item" key={feature}>
+                  <span className="welcome-feature-check" aria-hidden="true">
                     ✓
                   </span>
                   <span>{feature}</span>
@@ -218,21 +181,12 @@ export default function WelcomePage() {
           </div>
         </section>
 
-        <section
-          className="welcome-cta-section"
-          aria-labelledby="welcome-cta-title"
-        >
+        <section className="welcome-cta-section" aria-labelledby="welcome-cta-title">
           <div className="welcome-cta-card">
-            <div
-              className="welcome-cta-symbol"
-              aria-hidden="true"
-            >
+            <div className="welcome-cta-symbol" aria-hidden="true">
               ☕
             </div>
-
-            <span className="welcome-section-kicker">
-              وقت شروع است
-            </span>
+            <span className="welcome-section-kicker">وقت شروع است</span>
 
             <h2 id="welcome-cta-title">
               {user
@@ -246,10 +200,7 @@ export default function WelcomePage() {
                 : 'رایگان ثبت‌نام کنید و در ۵ دقیقه منوی آنلاین داشته باشید.'}
             </p>
 
-            <Link
-              to={primaryPath}
-              className="btn btn-accent btn-lg"
-            >
+            <Link to={primaryPath} className="btn btn-accent btn-lg">
               {user ? 'رفتن به داشبورد' : 'ساخت منوی من'}
               <span aria-hidden="true">←</span>
             </Link>
@@ -258,11 +209,7 @@ export default function WelcomePage() {
       </main>
 
       <footer className="welcome-footer">
-        <Link
-          to="/"
-          className="welcome-footer-brand"
-          aria-label="QRMenu - صفحه اصلی"
-        >
+        <Link to="/" className="welcome-footer-brand" aria-label="QRMenu - صفحه اصلی">
           <span aria-hidden="true">☕</span>
           QRMenu
         </Link>
