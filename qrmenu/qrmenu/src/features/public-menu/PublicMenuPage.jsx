@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { getPublicMenu } from '../../api/PublicMenu';
-import { formatPrice } from '../../utils/formatPrice';
+import MenuPreview from '../../components/MenuPreview';
 
 export default function PublicMenuPage() {
   const { id } = useParams();
@@ -12,46 +12,28 @@ export default function PublicMenuPage() {
   useEffect(() => {
     getPublicMenu(id)
       .then((res) => setData(res.data))
-      .catch(() => setError('Menu not found'))
+      .catch(() => setError('منو یافت نشد.'))
       .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <div className="container">Loading...</div>;
-  if (error || !data) return <div className="container"><div className="error">{error}</div></div>;
+  if (loading) return (
+    <div className="container" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center' }}>
+      <div className="spinner"></div>
+    </div>
+  );
+
+  if (error || !data) return (
+    <div className="container menu-empty" style={{ minHeight: '100vh' }}>
+      <div className="menu-empty-icon">☕</div>
+      <h2>منو یافت نشد</h2>
+      <p>{error || 'این منو وجود ندارد یا در حال حاضر غیرفعال است.'}</p>
+    </div>
+  );
 
   return (
-    <div className="container" style={{ maxWidth: 600 }}>
-      <div className="card">
-        <h1>{data.menu.title}</h1>
-        {data.menu.description && <p style={{ color: '#666' }}>{data.menu.description}</p>}
-      </div>
-
-      {data.sections.map((section) => (
-        <div key={section.id} className="card">
-          <h2>{section.name}</h2>
-          {section.start_time && (
-            <p style={{ fontSize: 12, color: '#999', marginBottom: 12 }}>
-              {section.start_time} — {section.end_time}
-            </p>
-          )}
-          {section.items.map((item) => (
-            <div key={item.id} style={{
-              padding: '12px 0',
-              borderBottom: '1px solid #eee',
-              display: 'flex',
-              justifyContent: 'space-between',
-            }}>
-              <div>
-                <strong>{item.item}</strong>
-                {item.description && <p style={{ color: '#666', fontSize: 14 }}>{item.description}</p>}
-              </div>
-              <div style={{ color: '#2563eb', fontWeight: 'bold' }}>
-                {formatPrice(item.price)}
-              </div>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
+    <MenuPreview 
+      menu={data.menu} 
+      sections={data.sections} 
+    />
   );
 }

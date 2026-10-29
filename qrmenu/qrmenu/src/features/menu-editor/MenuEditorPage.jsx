@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getMenu, getMenuPreview } from '../../api/menus';
 import SectionList from './SectionList';
-import { formatPrice } from '../../utils/formatPrice';
+import MenuPreview from '../../components/MenuPreview';
 
 export default function MenuEditorPage() {
   const { id } = useParams();
@@ -13,6 +13,7 @@ export default function MenuEditorPage() {
   
   const [mode, setMode] = useState('edit'); 
   const [previewData, setPreviewData] = useState(null);
+  const [previewLoading, setPreviewLoading] = useState(false);
 
   const loadMenu = async () => {
     setLoading(true);
@@ -27,12 +28,17 @@ export default function MenuEditorPage() {
   };
 
   const loadPreview = async () => {
+    setPreviewLoading(true);
+    setError('');
     try {
       const res = await getMenuPreview(id);
       setPreviewData(res.data);
-      setMode('preview');
+      setMode('preview'); // Only switch mode if successful
     } catch (err) {
-      setError('خطا در دریافت پیش‌نمایش منو.');
+      setError('خطا در دریافت پیش‌نمایش منو. لطفا دوباره تلاش کنید.');
+      setMode('edit'); // Stay in edit mode if it fails
+    } finally {
+      setPreviewLoading(false);
     }
   };
 
@@ -41,7 +47,7 @@ export default function MenuEditorPage() {
   }, [id]);
 
   if (loading) return <div className="container text-center mt-5"><div className="spinner" style={{ margin: '0 auto' }}></div></div>;
-  if (error) return <div className="container mt-4"><div className="error">{error}</div></div>;
+  if (error && mode === 'edit') return <div className="container mt-4"><div className="error">{error}</div></div>;
   if (!menu) return <div className="container mt-4">منو یافت نشد.</div>;
 
   return (
@@ -57,8 +63,8 @@ export default function MenuEditorPage() {
         <div className="flex gap-2">
           <Link to="/dashboard" className="btn btn-ghost">بازگشت به داشبورد</Link>
           {mode === 'edit' ? (
-            <button className="btn btn-accent" onClick={loadPreview}>
-              پایان و مشاهده کد QR ←
+            <button className="btn btn-accent" onClick={loadPreview} disabled={previewLoading}>
+              {previewLoading ? 'در حال آماده‌سازی...' : 'پایان و مشاهده کد QR ←'}
             </button>
           ) : (
             <button className="btn" onClick={() => setMode('edit')}>
@@ -68,6 +74,9 @@ export default function MenuEditorPage() {
         </div>
       </div>
 
+      {error && mode === 'preview' && <div className="error mb-3">{error}</div>}
+
+      {/* EDIT MODE */}
       {mode === 'edit' && (
         <div className="grid grid-2" style={{ alignItems: 'start' }}>
           <div>
@@ -90,56 +99,20 @@ export default function MenuEditorPage() {
         </div>
       )}
 
+      {/* PREVIEW & QR MODE */}
       {mode === 'preview' && previewData && (
         <div className="grid grid-2" style={{ alignItems: 'start' }}>
+          
+          {/* Left side: Public Menu Preview (Now using the component) */}
           <div>
             <h3 className="mb-3">پیش‌نمایش منو (آنچه مشتری می‌بیند)</h3>
-            <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <div className="restaurant-hero" style={{ minHeight: 140, borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0' }}>
-                <div className="restaurant-hero-content">
-                  <h1 style={{ fontSize: '1.5rem' }}>{previewData.menu.title}</h1>
-                  <p>{previewData.menu.description}</p>
-                </div>
-              </div>
-              
-              <div style={{ padding: 16 }}>
-                {previewData.sections.length === 0 ? (
-                  <p className="text-muted text-center py-4">هنوز هیچ بخشی برای این منو ساخته نشده است.</p>
-                ) : (
-                  previewData.sections.map(sec => (
-                    <div key={sec.id} className="mb-4">
-                      <h4 style={{ borderBottom: '1px solid var(--border)', paddingBottom: 8, marginBottom: 12, color: 'var(--color-accent)' }}>
-                        {sec.name}
-                        {sec.start_time && (
-                          <span style={{ fontSize: 11, color: 'var(--text-muted)', marginRight: 8, fontWeight: 'normal', direction: 'ltr', display: 'inline-block' }}>
-                            ({sec.start_time} - {sec.end_time})
-                          </span>
-                        )}
-                      </h4>
-                      {sec.items.length === 0 ? (
-                        <p className="text-muted" style={{ fontSize: 12 }}>آیتمی در این بخش وجود ندارد.</p>
-                      ) : (
-                        <div className="stack">
-                          {sec.items.map(item => (
-                            <div key={item.id} className="flex justify-between items-center" style={{ paddingBottom: 8 }}>
-                              <div>
-                                <div style={{ fontSize: 15, fontWeight: 700 }}>{item.item}</div>
-                                {item.description && <div className="text-muted" style={{ fontSize: 12 }}>{item.description}</div>}
-                              </div>
-                              <div style={{ color: 'var(--color-primary-light)', fontWeight: 700 }}>
-                                {formatPrice(item.price)}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
+            <MenuPreview 
+              menu={previewData.menu} 
+              sections={previewData.sections} 
+            />
           </div>
 
+          {/* Right side: QR Code */}
           <div className="card text-center" style={{ padding: 32 }}>
             <h3 className="mb-2">کد QR شما آماده است!</h3>
             <p className="text-muted mb-4" style={{ fontSize: 14 }}>
@@ -163,14 +136,14 @@ export default function MenuEditorPage() {
                   >
                     دانلود تصویر
                   </a>
-                  <a 
-                    href={`${import.meta.env.VITE_API_URL}/menu/${menu.id}/`} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="btn"
-                  >
-                    مشاهده منو (لینک مستقیم)
-                  </a>
+              <a 
+                href={`/menu/${menu.id}/`} 
+                target="_blank" 
+                rel="noreferrer"
+                className="btn"
+              >
+                مشاهده منو (لینک مستقیم)
+              </a>
                 </div>
               </>
             ) : (

@@ -8,6 +8,11 @@ export default function ItemList({ section, onReload }) {
   const [price, setPrice] = useState('');
   const [error, setError] = useState('');
 
+  const [editingId, setEditingId] = useState(null);
+  const [editItem, setEditItem] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPrice, setEditPrice] = useState('');
+
   const handleAdd = async (e) => {
     e.preventDefault();
     setError('');
@@ -45,6 +50,33 @@ export default function ItemList({ section, onReload }) {
     }
   };
 
+  const startEditing = (item) => {
+    setEditingId(item.id);
+    setEditItem(item.item);
+    setEditDescription(item.description || '');
+    setEditPrice(item.price);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+    setError('');
+  };
+
+  const handleSaveEdit = async (id) => {
+    setError('');
+    try {
+      await updateItem(id, {
+        item: editItem,
+        description: editDescription,
+        price: parseInt(editPrice, 10),
+      });
+      setEditingId(null);
+      onReload();
+    } catch (err) {
+      setError(err.response?.data?.message || 'خطا در ویرایش آیتم.');
+    }
+  };
+
   return (
     <div style={{ background: 'var(--surface-input)', padding: 16, borderRadius: 'var(--radius-sm)' }}>
       {error && <div className="error mb-3">{error}</div>}
@@ -55,23 +87,47 @@ export default function ItemList({ section, onReload }) {
         <div className="stack mb-3">
           {section.items?.map((item) => (
             <div key={item.id} style={{
-              padding: '8px 12px', borderBottom: '1px solid var(--border)',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8
+              padding: '12px', borderBottom: '1px solid var(--border)',
+              background: editingId === item.id ? 'var(--surface-raised)' : 'transparent',
+              borderRadius: 'var(--radius-sm)',
+              transition: 'background 0.2s ease'
             }}>
-              <div>
-                <strong style={{ fontSize: 14 }}>{item.item}</strong>
-                {item.description && <span className="text-muted" style={{ fontSize: 12 }}> — {item.description}</span>}
-                <span style={{ marginRight: 12, color: 'var(--color-primary-light)', fontSize: 13, fontWeight: 700 }}>{formatPrice(item.price)}</span>
-                {!item.available && <span className="badge badge-danger" style={{ marginRight: 8, fontSize: 10 }}>ناموجود</span>}
-              </div>
-              <div className="flex gap-1">
-                <button className="btn btn-sm btn-secondary" onClick={() => handleToggleAvailable(item)}>
-                  {item.available ? 'مخفی کن' : 'نمایش بده'}
-                </button>
-                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(item.id)}>
-                  حذف
-                </button>
-              </div>
+              
+              {editingId === item.id ? (
+                <div className="row gap-2">
+                  <input className="input" value={editItem} onChange={(e) => setEditItem(e.target.value)} placeholder="نام" style={{ flex: '1 1 150px' }} />
+                  <input className="input" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} placeholder="توضیحات" style={{ flex: '2 1 200px' }} />
+                  <input className="input" type="number" value={editPrice} onChange={(e) => setEditPrice(e.target.value)} placeholder="قیمت" style={{ flex: '1 1 100px' }} />
+                  
+                  <div className="flex gap-1" style={{ flex: '0 0 auto' }}>
+                    <button className="btn btn-sm" onClick={() => handleSaveEdit(item.id)}>ذخیره</button>
+                    <button className="btn btn-sm btn-ghost" onClick={cancelEditing}>انصراف</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex justify-between items-center" style={{ flexWrap: 'wrap', gap: 8 }}>
+                  <div>
+                    <strong style={{ fontSize: 14 }}>{item.item}</strong>
+                    {item.description && <span className="text-muted" style={{ fontSize: 12 }}> — {item.description}</span>}
+                    <span style={{ marginRight: 12, color: 'var(--color-primary-light)', fontSize: 13, fontWeight: 700 }}>{formatPrice(item.price)}</span>
+                    {!item.available && <span className="badge badge-danger" style={{ marginRight: 8, fontSize: 10 }}>ناموجود</span>}
+                  </div>
+                  
+                  <div className="flex gap-1">
+                    {/* Removed btn-secondary here so it uses the main green color */}
+                    <button className="btn btn-sm" onClick={() => startEditing(item)}>
+                      ویرایش
+                    </button>
+                    <button className="btn btn-sm btn-secondary" onClick={() => handleToggleAvailable(item)}>
+                      {item.available ? 'مخفی' : 'نمایش'}
+                    </button>
+                    <button className="btn btn-sm btn-danger" onClick={() => handleDelete(item.id)}>
+                      حذف
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
           ))}
         </div>
