@@ -22,17 +22,17 @@ export default function ItemList({ section, onReload }) {
       setPrice('');
       onReload();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add item');
+      setError(err.response?.data?.message || 'خطا در افزودن آیتم جدید.');
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this item?')) return;
+    if (!window.confirm('آیا از حذف این آیتم مطمئن هستید؟')) return;
     try {
       await deleteItem(id);
       onReload();
     } catch (err) {
-      setError('Failed to delete item');
+      setError('خطا در حذف آیتم.');
     }
   };
 
@@ -41,45 +41,58 @@ export default function ItemList({ section, onReload }) {
       await updateItem(item.id, { available: !item.available });
       onReload();
     } catch (err) {
-      setError('Failed to update item');
+      setError('خطا در بروزرسانی وضعیت آیتم.');
     }
   };
 
   return (
-    <div>
-      {error && <div className="error">{error}</div>}
+    <div style={{ background: 'var(--surface-input)', padding: 16, borderRadius: 'var(--radius-sm)' }}>
+      {error && <div className="error mb-3">{error}</div>}
 
-      {section.items?.map((item) => (
-        <div key={item.id} style={{
-          padding: 8, borderBottom: '1px solid #eee',
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
-        }}>
-          <div>
-            <strong>{item.item}</strong>
-            {item.description && <span style={{ color: '#666' }}> — {item.description}</span>}
-            <span style={{ marginLeft: 8, color: '#2563eb' }}>{formatPrice(item.price)}</span>
-            {!item.available && <span style={{ marginLeft: 8, color: '#dc2626' }}>(unavailable)</span>}
-          </div>
-          <div>
-            <button className="btn btn-secondary" onClick={() => handleToggleAvailable(item)}>
-              {item.available ? 'Hide' : 'Show'}
-            </button>
-            <button className="btn btn-danger" onClick={() => handleDelete(item.id)}>
-              Delete
-            </button>
-          </div>
+      {section.items?.length === 0 ? (
+        <p className="text-muted" style={{ fontSize: 13, marginBottom: 12 }}>آیتمی در این بخش وجود ندارد.</p>
+      ) : (
+        <div className="stack mb-3">
+          {section.items?.map((item) => (
+            <div key={item.id} style={{
+              padding: '8px 12px', borderBottom: '1px solid var(--border)',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8
+            }}>
+              <div>
+                <strong style={{ fontSize: 14 }}>{item.item}</strong>
+                {item.description && <span className="text-muted" style={{ fontSize: 12 }}> — {item.description}</span>}
+                <span style={{ marginRight: 12, color: 'var(--color-primary-light)', fontSize: 13, fontWeight: 700 }}>{formatPrice(item.price)}</span>
+                {!item.available && <span className="badge badge-danger" style={{ marginRight: 8, fontSize: 10 }}>ناموجود</span>}
+              </div>
+              <div className="flex gap-1">
+                <button className="btn btn-sm btn-secondary" onClick={() => handleToggleAvailable(item)}>
+                  {item.available ? 'مخفی کن' : 'نمایش بده'}
+                </button>
+                <button className="btn btn-sm btn-danger" onClick={() => handleDelete(item.id)}>
+                  حذف
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
+      )}
 
-      <form onSubmit={handleAdd} style={{ marginTop: 12 }}>
+      <form onSubmit={handleAdd} style={{ borderTop: section.items?.length ? '1px solid var(--border)' : 'none', paddingTop: section.items?.length ? 16 : 0 }}>
+        <h5 style={{ fontSize: 13, marginBottom: 8, color: 'var(--text-muted)' }}>افزودن آیتم جدید</h5>
         <div className="row">
-          <input className="input" placeholder="Item name"
-            value={item} onChange={(e) => setItem(e.target.value)} required />
-          <input className="input" placeholder="Description"
-            value={description} onChange={(e) => setDescription(e.target.value)} />
-          <input className="input" type="number" placeholder="Price"
-            value={price} onChange={(e) => setPrice(e.target.value)} required />
-          <button className="btn" type="submit">Add Item</button>
+          <input className="input" placeholder="نام آیتم (مثلاً: اسپرسو)"
+            value={item} onChange={(e) => setItem(e.target.value)} required 
+            style={{ flex: '2 1 150px' }} />
+          
+          <input className="input" placeholder="توضیحات (اختیاری)"
+            value={description} onChange={(e) => setDescription(e.target.value)} 
+            style={{ flex: '2 1 200px' }} />
+          
+          <input className="input" type="number" placeholder="قیمت (تومان)"
+            value={price} onChange={(e) => setPrice(e.target.value)} required 
+            style={{ flex: '1 1 100px' }} />
+          
+          <button className="btn" type="submit" style={{ flex: '0 0 auto' }}>افزودن</button>
         </div>
       </form>
     </div>

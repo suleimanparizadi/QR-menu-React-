@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; 
 import { getMenus, createMenu, deleteMenu } from '../../api/menus';
 
 export default function DashboardPage() {
+  const navigate = useNavigate(); 
   const [menus, setMenus] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -28,16 +29,18 @@ export default function DashboardPage() {
     loadMenus();
   }, []);
 
-  const handleCreate = async (e) => {
+    const handleCreate = async (e) => {
     e.preventDefault();
     setError('');
     setCreating(true);
     try {
-      await createMenu({ title: newTitle, description: newDescription });
-      setNewTitle('');
-      setNewDescription('');
-      setShowForm(false);
-      loadMenus();
+      const res = await createMenu({ title: newTitle, description: newDescription });
+      
+      if (res.data && res.data.menu) {
+        navigate(`/menus/${res.data.menu.id}`); 
+      } else {
+        loadMenus(); 
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'خطا در ساخت منو.');
     } finally {
@@ -55,8 +58,61 @@ export default function DashboardPage() {
     }
   };
 
+  // --- New Download & Print Functions ---
+  const handleDownload = async (url, title) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `QR-${title}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      alert('خطا در دانلود تصویر. لطفا دوباره تلاش کنید.');
+    }
+  };
+
+  const handlePrint = (url, title) => {
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html dir="rtl">
+        <head>
+          <title>چاپ کد QR - ${title}</title>
+          <style>
+            body { 
+              display: flex; 
+              flex-direction: column; 
+              align-items: center; 
+              justify-content: center; 
+              height: 100vh; 
+              margin: 0; 
+              font-family: Tahoma, sans-serif; 
+            }
+            img { 
+              width: 350px; 
+              height: 350px; 
+              margin-bottom: 20px; 
+            }
+            h1 { 
+              font-size: 24px; 
+              margin: 0; 
+            }
+          </style>
+        </head>
+        <body>
+          <h1>${title}</h1>
+          <img src="${url}" onload="window.print(); window.close();" />
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+  // -------------------------------------
+
   return (
-    <div className="container" dir="rtl" style={{ paddingTop: 32 }}>
+    <div className="container" dir="rtl" style={{ paddingTop: 32, paddingBottom: 32 }}>
       
       {/* Header */}
       <div className="section-header" style={{ marginBottom: 32 }}>
@@ -141,24 +197,52 @@ export default function DashboardPage() {
                 <span className="badge">آیدی: {menu.id}</span>
               </div>
 
-              <div className="flex gap-4 items-center mt-auto" style={{ background: 'var(--surface-input)', padding: 16, borderRadius: 'var(--radius-md)' }}>
-                {/* QR Code Preview */}
-                <div style={{ flexShrink: 0 }}>
-                  {menu.qr_code ? (
+              <div className="flex gap-4 mt-auto" style={{ 
+                background: 'var(--surface-input)', 
+                padding: 16, 
+                borderRadius: 'var(--radius-md)',
+                flexWrap: 'wrap', 
+              }}>
+                
+                {/* QR Code Preview + Actions */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, margin: '0 auto' }}>
+                  {menu.qr_code && menu.qr_code.startsWith('http') ? (
                     <img 
                       src={menu.qr_code} 
                       alt={`QR code for ${menu.title}`} 
-                      style={{ width: 80, height: 80, borderRadius: 8, border: '2px solid white' }} 
+                      style={{ width: 100, height: 100, borderRadius: 8, border: '2px solid white', objectFit: 'contain' }} 
                     />
                   ) : (
-                    <div style={{ width: 80, height: 80, background: '#334', borderRadius: 8, display: 'grid', placeItems: 'center', fontSize: 10, color: '#999' }}>
+                    <div style={{ width: 100, height: 100, background: '#334', borderRadius: 8, display: 'grid', placeItems: 'center', fontSize: 10, color: '#999', textAlign: 'center', padding: 8 }}>
                       در حال ساخت...
+                    </div>
+                  )}
+                  
+                  {/* Download & Print Buttons */}
+                  {menu.qr_code && menu.qr_code.startsWith('http') && (
+                    <div className="flex gap-2 w-full">
+                      <button 
+                        className="btn btn-sm btn-secondary" 
+                        style={{ padding: '4px 8px', fontSize: 11, flex: 1 }}
+                        onClick={() => handleDownload(menu.qr_code, menu.title)}
+                        title="دانلود تصویر"
+                      >
+                        دانلود
+                      </button>
+                      <button 
+                        className="btn btn-sm btn-secondary" 
+                        style={{ padding: '4px 8px', fontSize: 11, flex: 1 }}
+                        onClick={() => handlePrint(menu.qr_code, menu.title)}
+                        title="چاپ کد"
+                      >
+                        چاپ
+                      </button>
                     </div>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ flex: '1 1 200px', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' }}>
                   <Link to={`/menus/${menu.id}`} className="btn btn-sm btn-block">
                     ویرایش منو
                   </Link>
