@@ -1,5 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../features/auth/useAuth';
+import { useAuth } from '../auth/useAuth';
+
 const steps = [
   {
     n: '۱',
@@ -49,7 +50,7 @@ export default function WelcomePage() {
 
   const handleLogout = () => {
     logout();
-    navigate('/'); // Stay on welcome page after logout
+    navigate('/');
   };
 
   return (
@@ -70,15 +71,15 @@ export default function WelcomePage() {
           <div className="welcome-nav-actions">
             {user ? (
               <>
-                <span className="welcome-nav-user">
+                {/* Display Name is now a button linking to profile/dashboard */}
+                <Link to="/profile" className="btn btn-sm btn-ghost" style={{ textTransform: 'none' }}>
                   {user.display_name || user.phone_number}
-                </span>
+                </Link>
+                
                 <Link to="/dashboard" className="btn btn-sm btn-ghost">
                   داشبورد
                 </Link>
-                <Link to="/dashboard" className="btn btn-sm btn-ghost">
-                  پروفایل
-                </Link>
+                
                 <button onClick={handleLogout} className="btn btn-sm btn-danger">
                   خروج
                 </button>
@@ -135,8 +136,6 @@ export default function WelcomePage() {
           </div>
         </section>
 
-        {/* ... Rest of your sections (How it works, Features, CTA, Footer) remain the same ... */}
-        
         <section className="welcome-section welcome-how" aria-labelledby="welcome-how-title">
           <div className="welcome-section-heading">
             <span className="welcome-section-kicker">شروع آسان</span>

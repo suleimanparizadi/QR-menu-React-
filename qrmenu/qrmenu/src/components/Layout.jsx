@@ -7,27 +7,37 @@ export default function Layout({ children }) {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate('/');
   };
 
   return (
     <>
-      <div className="nav">
-        <div>
-          <Link to="/dashboard">QR Menu</Link>
-        </div>
-        <div>
+      <div className="nav" dir="rtl">
+        {/* Brand - Links to Welcome Page and has the emoji back */}
+        <Link to="/" className="nav-brand" style={{ display: 'flex', alignItems: 'center', gap: '8px', textDecoration: 'none' }}>
+          <span style={{ fontSize: '1.4rem' }}>☕</span> QRMenu
+        </Link>
+        
+        <div className="nav-links">
           {user ? (
             <>
-              <span style={{ marginRight: 16 }}>
+              <Link to="/dashboard" style={{ fontWeight: 600, color: 'var(--color-text)' }}>
+                داشبورد
+              </Link>
+              
+              <Link to="/profile" className="btn btn-sm btn-ghost" style={{ textTransform: 'none' }}>
                 {user.display_name || user.phone_number}
-              </span>
-              <button className="btn btn-secondary" onClick={handleLogout}>
-                Logout
+              </Link>
+              
+              <button onClick={handleLogout} className="btn btn-sm btn-danger">
+                خروج
               </button>
             </>
           ) : (
-            <Link to="/login">Login</Link>
+            <>
+              <Link to="/login" className="btn btn-ghost btn-sm">ورود</Link>
+              <Link to="/register" className="btn btn-sm">ثبت‌نام</Link>
+            </>
           )}
         </div>
       </div>

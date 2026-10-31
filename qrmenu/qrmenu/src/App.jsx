@@ -10,6 +10,8 @@ import MenuEditorPage from './features/menu-editor/MenuEditorPage';
 import AnalyticsPage from './features/analytics/AnalyticsPage';
 import PublicMenuPage from './features/public-menu/PublicMenuPage';
 import WelcomePage from './features/welcome/WelcomePage';
+import ProfilePage from './features/profile/ProfilePage'; // Import
+
 
 // Wrapper to redirect logged-in users away from login/register
 function PublicRoute({ children }) {
@@ -23,11 +25,9 @@ export default function App() {
   return (
     <AuthProvider>
       <Routes>
-        {/* Public routes */}
         <Route path="/" element={<WelcomePage />} />
         <Route path="/menu/:id" element={<PublicMenuPage />} />
         
-        {/* Auth routes (redirect to dashboard if already logged in) */}
         <Route path="/login" element={
           <PublicRoute><LoginPage /></PublicRoute>
         } />
@@ -35,7 +35,11 @@ export default function App() {
           <PublicRoute><RegisterPage /></PublicRoute>
         } />
 
-        {/* Protected routes (require login) */}
+
+        <Route path="/profile" element={
+          <ProtectedRoute><Layout><ProfilePage /></Layout></ProtectedRoute>
+        } />
+
         <Route path="/dashboard" element={
           <ProtectedRoute><Layout><DashboardPage /></Layout></ProtectedRoute>
         } />
@@ -46,7 +50,6 @@ export default function App() {
           <ProtectedRoute><Layout><AnalyticsPage /></Layout></ProtectedRoute>
         } />
 
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
